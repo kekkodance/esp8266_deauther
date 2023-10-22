@@ -4,6 +4,8 @@
 
 **Scan for WiFi devices, block selected connections, create dozens of networks and confuse WiFi scanners.**
 
+**$${\color{red}You'll \space have \space to \space compile \space it \space yourself \space for \space your \space own \space board! \space Follow \space the \space DIY \space Tutorial \space below!}$$**
+
 ## New Documentation
 
 Hi 👋  
@@ -11,8 +13,7 @@ Please visit [Deauther.com](https://deauther.com) for information about this pro
 Here are some quick links:
 
 * [Buy](https://deauther.com/docs/buy)
-* [Download](https://deauther.com/docs/download)
-* [DIY Tutorial](https://deauther.com/docs/category/diy-tutorial)
+* [**DIY Tutorial**](https://deauther.com/docs/category/diy-tutorial)
 * [Usage](https://deauther.com/docs/category/usage)
 * [FAQ](https://deauther.com/docs/faq)
 
