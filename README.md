@@ -1,4 +1,4 @@
-# ESP8266 Deauther
+# ESP8266 Deauther (with Flip Display functionality)
 
 <img src='https://deauther.com/img/logo.png' alt='Deauther Logo' width='200' />
 
