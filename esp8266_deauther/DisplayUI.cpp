@@ -1,7 +1,7 @@
 /* This software is licensed under the MIT License: https://github.com/spacehuhntech/esp8266_deauther */
 
 #include "DisplayUI.h"
-
+#include "CLI.h"
 #include "settings.h"
 
 // ===== adjustable ===== //
@@ -14,7 +14,7 @@ void DisplayUI::configInit() {
        make sure to have version 4 of the display library installed
        https://github.com/ThingPulse/esp8266-oled-ssd1306/releases/tag/4.0.0
      */
-    display.setFont(DejaVu_Sans_Mono_12);
+    display.setFont(Dialog_plain_12);
 
     display.setContrast(255);
 
@@ -88,7 +88,17 @@ void DisplayUI::setup() {
             mode = DISPLAY_MODE::PACKETMONITOR;
         });
         addMenuNode(&mainMenu, D_CLOCK, &clockMenu); // CLOCK
-
+        addMenuNode(&mainMenu, D_FLIP_SCREEN, [this]() { // FLIP SCREEN
+            if (displayFlipped) {
+                display.resetOrientation();
+            }
+            else {
+                display.mirrorScreen();
+                display.flipScreenVertically();
+            }
+            display.clear();
+            displayFlipped = !displayFlipped;
+        });
 #ifdef HIGHLIGHT_LED
         addMenuNode(&mainMenu, D_LED, [this]() {     // LED
             highlightLED = !highlightLED;
@@ -514,6 +524,73 @@ void DisplayUI::off() {
     }
 }
 
+void DisplayUI::goUp() {
+    scrollCounter = 0;
+    scrollTime    = currentTime;
+    buttonTime    = currentTime;
+
+    if (!tempOff) {
+        if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+            if (currentMenu->selected > 0) currentMenu->selected--;
+            else currentMenu->selected = currentMenu->list->size() - 1;
+        } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
+            scan.setChannel(wifi_channel + 1);
+        } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
+            setTime(clockHour, clockMinute + 1, clockSecond);
+        }
+    }
+}
+
+void DisplayUI::holdUp() {
+    scrollCounter = 0;
+    scrollTime    = currentTime;
+    buttonTime    = currentTime;
+    if (!tempOff) {
+        if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+            if (currentMenu->selected > 0) currentMenu->selected--;
+            else currentMenu->selected = currentMenu->list->size() - 1;
+        } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
+            scan.setChannel(wifi_channel + 1);
+        } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
+            setTime(clockHour, clockMinute + 10, clockSecond);
+        }
+    }
+}
+
+void DisplayUI::goDown() {
+    scrollCounter = 0;
+    scrollTime    = currentTime;
+    buttonTime    = currentTime;
+    if (!tempOff) {
+        if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+            if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
+            else currentMenu->selected = 0;
+        } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
+            scan.setChannel(wifi_channel - 1);
+        } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
+            setTime(clockHour, clockMinute - 1, clockSecond);
+        }
+    }
+}
+
+void DisplayUI::holdDown() {
+    scrollCounter = 0;
+    scrollTime    = currentTime;
+    buttonTime    = currentTime;
+    if (!tempOff) {
+        if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+            if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
+            else currentMenu->selected = 0;
+        } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
+            scan.setChannel(wifi_channel - 1);
+        }
+
+        else if (mode == DISPLAY_MODE::CLOCK) {           // when in clock, change time
+            setTime(clockHour, clockMinute - 10, clockSecond);
+        }
+    }
+}
+
 void DisplayUI::setupButtons() {
     up   = new ButtonPullup(BUTTON_UP);
     down = new ButtonPullup(BUTTON_DOWN);
@@ -522,71 +599,24 @@ void DisplayUI::setupButtons() {
 
     // === BUTTON UP === //
     up->setOnClicked([this]() {
-        scrollCounter = 0;
-        scrollTime    = currentTime;
-        buttonTime    = currentTime;
-
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected > 0) currentMenu->selected--;
-                else currentMenu->selected = currentMenu->list->size() - 1;
-            } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
-                scan.setChannel(wifi_channel + 1);
-            } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
-                setTime(clockHour, clockMinute + 1, clockSecond);
-            }
-        }
+        if (displayUI.displayFlipped) goUp();
+        else goDown();
     });
 
     up->setOnHolding([this]() {
-        scrollCounter = 0;
-        scrollTime    = currentTime;
-        buttonTime    = currentTime;
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected > 0) currentMenu->selected--;
-                else currentMenu->selected = currentMenu->list->size() - 1;
-            } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
-                scan.setChannel(wifi_channel + 1);
-            } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
-                setTime(clockHour, clockMinute + 10, clockSecond);
-            }
-        }
+        if (displayUI.displayFlipped) holdUp();
+        else holdDown();
     }, buttonDelay);
 
     // === BUTTON DOWN === //
     down->setOnClicked([this]() {
-        scrollCounter = 0;
-        scrollTime    = currentTime;
-        buttonTime    = currentTime;
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
-                else currentMenu->selected = 0;
-            } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
-                scan.setChannel(wifi_channel - 1);
-            } else if (mode == DISPLAY_MODE::CLOCK) {         // when in clock, change time
-                setTime(clockHour, clockMinute - 1, clockSecond);
-            }
-        }
+        if (displayUI.displayFlipped) goDown();
+        else goUp();
     });
 
     down->setOnHolding([this]() {
-        scrollCounter = 0;
-        scrollTime    = currentTime;
-        buttonTime    = currentTime;
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
-                else currentMenu->selected = 0;
-            } else if (mode == DISPLAY_MODE::PACKETMONITOR) { // when in packet monitor, change channel
-                scan.setChannel(wifi_channel - 1);
-            }
-
-            else if (mode == DISPLAY_MODE::CLOCK) {           // when in clock, change time
-                setTime(clockHour, clockMinute - 10, clockSecond);
-            }
-        }
+        if (displayUI.displayFlipped) holdDown();
+        else holdUp();
     }, buttonDelay);
 
     // === BUTTON A === //
@@ -612,7 +642,7 @@ void DisplayUI::setupButtons() {
                 case DISPLAY_MODE::CLOCK:
                 case DISPLAY_MODE::CLOCK_DISPLAY:
                     mode = DISPLAY_MODE::MENU;
-                    display.setFont(DejaVu_Sans_Mono_12);
+                    display.setFont(Dialog_plain_12);
                     display.setTextAlignment(TEXT_ALIGN_LEFT);
                     break;
             }
@@ -651,7 +681,7 @@ void DisplayUI::setupButtons() {
 
                 case DISPLAY_MODE::CLOCK:
                     mode = DISPLAY_MODE::MENU;
-                    display.setFont(DejaVu_Sans_Mono_12);
+                    display.setFont(Dialog_plain_12);
                     display.setTextAlignment(TEXT_ALIGN_LEFT);
                     break;
             }
