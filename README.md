@@ -13,7 +13,7 @@ Please visit [Deauther.com](https://deauther.com) for information about this pro
 Here are some quick links:
 
 * [Buy](https://deauther.com/docs/buy)
-* [**DIY Tutorial**](https://deauther.com/docs/category/diy-tutorial)
+* [**DIY Tutorial**](https://deauther.com/docs/diy/installation-arduino)
 * [Usage](https://deauther.com/docs/category/usage)
 * [FAQ](https://deauther.com/docs/faq)
 
